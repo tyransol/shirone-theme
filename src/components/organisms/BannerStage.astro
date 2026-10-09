@@ -747,9 +747,18 @@ const bannerPick = siteConfig.banner.pick === "random" ? "random" : "first";
 			"banner-stage__slide-video--fading",
 			!immediate,
 		);
-		void slideVideo.play().catch(() => {
-			// 自动播放被拒（少见：非手势触发的静音播放也通常放行）：静置显示首帧
-		});
+		// 静音自动播放：play() 若在资源选择早期被竞态打断（AbortError）或被
+		// 环境拒绝，静默吞掉会让视频永远停在首帧——待 canplay 后再试一次。
+		// active 类守卫确保重试不会让已让位（hideSlideVideo）的视频复活。
+		const tryPlay = () => {
+			if (!slideVideo.classList.contains("banner-stage__slide-video--active")) {
+				return;
+			}
+			void slideVideo.play().catch(() => {
+				slideVideo.addEventListener("canplay", tryPlay, { once: true });
+			});
+		};
+		tryPlay();
 	}
 
 	/** 离开视频项：视频层淡出并暂停，交还图片层 */
@@ -1001,6 +1010,15 @@ const bannerPick = siteConfig.banner.pick === "random" ? "random" : "first";
 			showImage(images[startIndex], true);
 			layers[runtime.activeLayer]?.setAttribute("fetchpriority", "high");
 			preloadNext(images, startIndex);
+		} else if (
+			isVideoSource(images[runtime.activeIndex]) &&
+			(!video || video.paused)
+		) {
+			// 从隐藏态恢复（visibilitychange / 壁纸模式往返）时 activeGroup 未变、
+			// 不会重走 showImage；但隐藏路径已把轮播视频 pause，这里必须主动
+			// 恢复静音自动播放，否则视频永远停在暂停态。悬浮视频播放期间让位。
+			slideVideo?.classList.add("banner-stage__slide-video--active");
+			void slideVideo?.play().catch(() => {});
 		}
 
 		if (state.rotate && !document.hidden) scheduleRotation(images);
