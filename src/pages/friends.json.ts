@@ -17,13 +17,14 @@ export const GET: APIRoute = () => {
 		return new Response(null, { status: 404 });
 	}
 
+	// FriendItem 当前没有 linkpage 字段：留空串，check-flink 回退抓取站点首页。
 	const link_list = getFriendsList().map((friend) => ({
 		name: friend.title,
 		link: friend.siteurl,
 		avatar: friend.imgurl,
 		descr: friend.desc,
 		siteshot: "",
-		linkpage: friend.linkpage ?? "",
+		linkpage: "",
 	}));
 
 	return new Response(JSON.stringify({ link_list, length: link_list.length }), {
