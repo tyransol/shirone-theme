@@ -94,3 +94,8 @@ artifacts/shirone-ai-*
 /public/assets/projects/
 /public/assets/anime/*.webp
 /shirone-content-fq/
+
+# local build caches
+.shirones/
+.shirones-ts-*/
+src/generated/local-icon-collections.ts
