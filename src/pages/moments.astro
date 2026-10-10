@@ -1,5 +1,6 @@
 ---
 import { getImage } from "astro:assets";
+import CommentSection from "@components/organisms/comment/CommentSection.astro";
 import MomentSection from "@components/organisms/MomentSection.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
@@ -7,6 +8,7 @@ import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { resolveImageAsset } from "@utils/asset-utils";
 import { getSortedMoments } from "@utils/content-utils";
 import { profileConfig } from "@/config";
+import { siteConfig } from "@/config/siteConfig";
 import { isPageAvailable } from "@/utils/page-availability";
 
 if (!isPageAvailable("moments")) {
@@ -50,4 +52,14 @@ const author = {
 
 <MainGridLayout title={i18n(I18nKey.moments)} description={i18n(I18nKey.momentsBanner)} page="moments">
     <MomentSection {moments} {author} client:visible></MomentSection>
+    <CommentSection
+        context={{
+            key: "moments",
+            path: "/moments/",
+            title: i18n(I18nKey.moments),
+            language: siteConfig.lang,
+        }}
+        description={i18n(I18nKey.momentsBanner)}
+        class="onload-animation"
+    />
 </MainGridLayout>
