@@ -10,7 +10,7 @@ import { withUserConfig } from "../utils/config-overlay.ts";
  * 启用时：在文章页和头像卡展示基于文章发布日期确定性计算的假阅读/访问数据，
  * 客户端脚本每 10 分钟自动刷新当前值。SSR 先输出基线数字保证无 JS 也能显示。
  */
-export const mockStatsConfig: MockStatsConfig = withUserConfig("mock-stats", {
+export const mockStatsConfig: MockStatsConfig = withUserConfig("mockStats", {
 	/** 全局假统计总开关 */
 	enable: false,
 	/** 发布后高热度天数（此期间每日随机 1–hotDailyMax） */
