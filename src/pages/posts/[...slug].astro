@@ -50,10 +50,12 @@ import {
 	resolveArticleShareOptions,
 	resolveCommentOptions,
 	resolveLastUpdatedNoticeOptions,
+	resolveMockStatsOptions,
 	resolveRandomCoverOptions,
 	resolveUmamiOptions,
 	siteConfig,
 	umamiConfig,
+	mockStatsConfig,
 } from "@/config";
 
 export async function getStaticPaths() {
@@ -144,6 +146,8 @@ const postCommentEnabled =
 const lastUpdatedNotice = resolveLastUpdatedNoticeOptions(articleConfig);
 const shareOptions = resolveArticleShareOptions(articleConfig);
 const umamiEnabled = resolveUmamiOptions(umamiConfig) !== null;
+const mockStatsEnabled = resolveMockStatsOptions(mockStatsConfig) !== null;
+const statsEnabled = umamiEnabled || mockStatsEnabled;
 const authorAvatarUrl = shareOptions
 	? await resolveAsset(profileConfig.avatar ?? "")
 	: "";
@@ -204,9 +208,9 @@ const randomCoverOptions = entry.data.image
 					</div>
 					<div class="text-sm">{remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}</div>
 				</div>
-				{umamiEnabled && (
+				{statsEnabled && (
 					<div class="flex flex-row items-center">
-						<UmamiStats variant="meta" path={canonicalPostUrl} />
+						<UmamiStats variant="meta" path={canonicalPostUrl} postId={entry.id} publishedDate={entry.data.published} />
 					</div>
 				)}
 			</div>

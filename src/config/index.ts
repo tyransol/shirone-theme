@@ -49,6 +49,11 @@ export {
 	imageBloomConfig,
 	resolveImageBloomOptions,
 } from "./imageBloomConfig";
+export {
+	type ResolvedMockStatsOptions,
+	mockStatsConfig,
+	resolveMockStatsOptions,
+} from "./mockStatsConfig";
 export { licenseConfig } from "./licenseConfig";
 export { llmsConfig } from "./llmsConfig";
 export {

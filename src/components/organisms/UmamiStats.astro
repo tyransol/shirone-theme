@@ -3,17 +3,38 @@ import MetaIcon from "@components/atoms/display/MetaIcon.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { Icon } from "astro-icon/components";
-import { resolveUmamiOptions, umamiConfig } from "@/config";
+import {
+	mockStatsConfig,
+	resolveMockStatsOptions,
+	resolveUmamiOptions,
+	umamiConfig,
+} from "@/config";
+import { computeMockViews, computeMockVisits, formatMockCount } from "@utils/mock-stats";
 
 interface Props {
 	variant?: "profile" | "meta";
 	path?: string;
 	class?: string;
 	style?: string;
+	/** 文章 ID（用于假统计计算，仅 meta 变体） */
+	postId?: string;
+	/** 文章发布日期（用于假统计计算，仅 meta 变体） */
+	publishedDate?: Date;
 }
 
-const { variant = "meta", path, class: className, style } = Astro.props;
-const enabled = resolveUmamiOptions(umamiConfig) !== null;
+const {
+	variant = "meta",
+	path,
+	class: className,
+	style,
+	postId,
+	publishedDate,
+} = Astro.props;
+
+const umamiEnabled = resolveUmamiOptions(umamiConfig) !== null;
+const mockEnabled = resolveMockStatsOptions(mockStatsConfig) !== null;
+const enabled = umamiEnabled || mockEnabled;
+const dataSource = umamiEnabled ? "umami" : mockEnabled ? "mock" : null;
 const pageViewsLabel = i18n(I18nKey.profileStatsPageViews);
 const visitsLabel = i18n(I18nKey.profileStatsVisits);
 const rootClass = [
@@ -23,15 +44,52 @@ const rootClass = [
 ]
 	.filter(Boolean)
 	.join(" ");
+
+// 假数据 SSR 基线（仅 meta 变体）
+let mockViewsDisplay = "--";
+let mockVisitsDisplay = "--";
+const isMockMetaReady = dataSource === "mock" && variant === "meta" && Boolean(postId && publishedDate);
+
+if (isMockMetaReady && postId && publishedDate) {
+	const mockOptions = resolveMockStatsOptions(mockStatsConfig);
+	if (mockOptions) {
+		const now = Date.now();
+		const views = computeMockViews(
+			postId,
+			publishedDate.getTime(),
+			now,
+			mockOptions,
+		);
+		const visits = computeMockVisits(views, mockOptions.visitRatio);
+		mockViewsDisplay = formatMockCount(views);
+		mockVisitsDisplay = formatMockCount(visits);
+	}
+}
+
+// aria-busy: meta 变体的假数据已由 SSR 算好 → false；其余 → true
+const ariaBusy = !(dataSource === "mock" && isMockMetaReady);
+
+// 数据属性
+const dataAttrs: Record<string, string> = {};
+if (dataSource === "umami") {
+	dataAttrs["data-shirone-umami"] = "";
+	if (path) dataAttrs["data-umami-path"] = path;
+} else if (dataSource === "mock") {
+	dataAttrs["data-shirone-mock-stats"] = "";
+	if (variant === "meta" && postId && publishedDate) {
+		dataAttrs["data-mock-stats-type"] = "post";
+		dataAttrs["data-mock-stats-id"] = postId;
+		dataAttrs["data-mock-stats-published"] = String(
+			publishedDate.getTime(),
+		);
+	} else if (variant === "profile") {
+		dataAttrs["data-mock-stats-type"] = "site";
+	}
+}
 ---
 
-{enabled && (
-	<div
-		class={rootClass}
-		style={style}
-		data-shirone-umami
-		data-umami-path={path}
-	>
+{enabled && Object.keys(dataAttrs).length > 0 && (
+	<div class={rootClass} style={style} {...dataAttrs}>
 		{variant === "profile" ? (
 			<>
 				<hr aria-hidden="true" />
@@ -45,7 +103,7 @@ const rootClass = [
 						data-shirone-umami-display
 						aria-live="polite"
 						aria-atomic="true"
-						aria-busy="true"
+						aria-busy={ariaBusy}
 					>
 						<span data-shirone-umami-metric>
 							{pageViewsLabel}
@@ -66,16 +124,20 @@ const rootClass = [
 					data-shirone-umami-display
 					aria-live="polite"
 					aria-atomic="true"
-					aria-busy="true"
+					aria-busy={ariaBusy}
 				>
 					<span data-shirone-umami-metric>
 						{pageViewsLabel}
-						<span data-shirone-umami-pageviews data-shirone-umami-value>--</span>
+						<span data-shirone-umami-pageviews data-shirone-umami-value>
+							{dataSource === "mock" ? mockViewsDisplay : "--"}
+						</span>
 					</span>
 					<span class="shirone-umami-stats__separator" aria-hidden="true">·</span>
 					<span data-shirone-umami-metric>
 						{visitsLabel}
-						<span data-shirone-umami-visits data-shirone-umami-value>--</span>
+						<span data-shirone-umami-visits data-shirone-umami-value>
+							{dataSource === "mock" ? mockVisitsDisplay : "--"}
+						</span>
 					</span>
 				</span>
 			</>
