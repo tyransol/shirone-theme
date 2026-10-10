@@ -4,15 +4,42 @@ import TimelineSection from "@components/organisms/TimelineSection.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
+import type { TimelineItem } from "@/types/timelineConfig";
 import { timelineConfig } from "@/config/timelineConfig";
+import { getSortedPosts } from "@/utils/content-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { resolveTimelineData } from "@/utils/feature-data";
 import { isPageAvailable } from "@/utils/page-availability";
+import { getPostUrl } from "@/utils/url-utils";
 
 if (!isPageAvailable("timeline")) {
 	return Astro.redirect("/404/");
 }
 
-const items = resolveTimelineData(timelineConfig);
+const manualItems = resolveTimelineData(timelineConfig);
+
+// 混合模式：把文章作为自动更新流合并进时间线（includePosts 关闭时零额外开销）
+const autoItems: TimelineItem[] = timelineConfig.includePosts
+	? (await getSortedPosts())
+			.slice(0, timelineConfig.postsLimit ?? undefined)
+			.map((post) => ({
+				title: post.data.title,
+				date: formatDateToYYYYMMDD(post.data.published).replace(/-/g, "."),
+				subtitle: post.data.category || undefined,
+				description: post.data.description || undefined,
+				tags: post.data.tags,
+				links: [{ label: i18n(I18nKey.viewOriginal), url: getPostUrl(post) }],
+			}))
+	: [];
+
+const timelineDateKey = (value: string) =>
+	Number(value.replace(/\D/g, "").slice(0, 8).padEnd(8, "0")) || 0;
+
+const items = [...manualItems, ...autoItems].sort((a, b) =>
+	timelineConfig.order === "asc"
+		? timelineDateKey(a.date) - timelineDateKey(b.date)
+		: timelineDateKey(b.date) - timelineDateKey(a.date),
+);
 ---
 
 <MainGridLayout

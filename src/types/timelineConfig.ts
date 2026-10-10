@@ -60,4 +60,11 @@ export interface TimelineConfig {
 	disabledKeys?: string[];
 	/** 可选自定义数据（向后兼容；默认读取 src/data/timeline.ts）。 */
 	items?: TimelineItem[];
+	/**
+	 * 混合模式：是否在时间线中追加由文章（posts）自动生成的更新流。
+	 * 默认 false，仅展示手写数据；开启后与手写条目合并并按日期排序。
+	 */
+	includePosts?: boolean;
+	/** 自动文章流的可选条数上限（按发布时间倒序取前 N 篇）；省略表示不限制。 */
+	postsLimit?: number;
 }

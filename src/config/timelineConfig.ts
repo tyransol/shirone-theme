@@ -42,5 +42,9 @@ export const timelineConfig: TimelineConfig = withUserConfig("timeline", {
 		},
 	],
 	order: "desc",
+	// 混合模式：默认 false，仅展示 src/data/timeline.ts 的手写节点；
+	// 置为 true 后，页面会额外把文章（posts）作为自动更新流合并进时间线，
+	// 可用 postsLimit 限制自动流条数（省略表示全部文章）。
+	includePosts: false,
 	// disabledTitles: [],
 });
