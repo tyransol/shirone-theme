@@ -93,6 +93,7 @@ artifacts/shirone-ai-*
 /public/assets/music/
 /public/assets/projects/
 /public/assets/anime/*.webp
+/public/wallpaper/
 /shirone-content-fq/
 
 # local build caches
