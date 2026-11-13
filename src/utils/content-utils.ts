@@ -10,8 +10,10 @@ import { initPostIdMap } from "@utils/permalink-utils";
 import { getCategoryUrl, getPostUrl } from "@utils/url-utils";
 
 // // Retrieve posts and sort them by publication date
-async function getRawSortedPosts(): Promise<CollectionEntry<"posts">[]> {
+async function getRawSortedPosts(includeUnlisted = false): Promise<CollectionEntry<"posts">[]> {
 	const allBlogPosts = await getCollection("posts", ({ data }) => {
+		// unlisted 的文章只通过自定义页面收录，不进首页 / 归档 / 时间线 / RSS
+		if (!includeUnlisted && data.unlisted === true) return false;
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 
@@ -21,8 +23,8 @@ async function getRawSortedPosts(): Promise<CollectionEntry<"posts">[]> {
 	return sorted;
 }
 
-export async function getSortedPosts(): Promise<CollectionEntry<"posts">[]> {
-	const sorted = await getRawSortedPosts();
+export async function getSortedPosts(includeUnlisted = false): Promise<CollectionEntry<"posts">[]> {
+	const sorted = await getRawSortedPosts(includeUnlisted);
 
 	for (let i = 1; i < sorted.length; i++) {
 		sorted[i].data.nextSlug = sorted[i - 1].id;
@@ -64,6 +66,7 @@ export type Tag = {
 
 export async function getTagList(): Promise<Tag[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
+		if (data.unlisted === true) return false;
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 
@@ -91,6 +94,7 @@ export type Category = {
 
 export async function getCategoryList(): Promise<Category[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
+		if (data.unlisted === true) return false;
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 	const count: { [key: string]: number } = {};

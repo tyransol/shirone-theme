@@ -16,6 +16,8 @@ export interface PostsSchemaOutput {
 	updatedAt?: Date;
 	pinned: boolean;
 	draft: boolean;
+	/** 不在首页 / 归档 / 标签 / 分类 / 时间线 / RSS 里出现，只通过自定义页面收录 */
+	unlisted: boolean;
 	comment: boolean;
 	description: string;
 	image: string;
@@ -61,6 +63,7 @@ const postsSchema: z.ZodType<PostsSchemaOutput> = z.object({
 	updatedAt: z.date().optional(),
 	pinned: z.boolean().optional().default(false),
 	draft: z.boolean().optional().default(false),
+	unlisted: z.boolean().optional().default(false),
 	comment: z.boolean().optional().default(true),
 	description: z.string().optional().default(""),
 	image: z.string().optional().default(""),

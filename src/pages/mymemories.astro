@@ -1,16 +1,20 @@
 ---
-/** 我和妹妹：日记与夜话的时间线页，只收 category 为「我和妹妹」的文章。 */
+/** 我和妹妹：日记与夜话的时间线页。文章标记了 unlisted，只在这里出现。 */
+import { getCollection } from "astro:content";
 import TimelineSection from "@components/organisms/TimelineSection.svelte";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import type { TimelineItem } from "@/types/timelineConfig";
-import { getSortedPosts } from "@/utils/content-utils";
+import { comparePublicationEntries } from "@/utils/content-date";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getPostUrl } from "@/utils/url-utils";
 
-const posts = (await getSortedPosts()).filter((post) => {
-	const tags: string[] = post.data.tags ?? [];
-	return post.data.category === "我和妹妹" || tags.includes("我和妹妹");
+const all = await getCollection("posts", ({ data }) => {
+	const tags: string[] = data.tags ?? [];
+	if (import.meta.env.PROD && data.draft === true) return false;
+	return data.category === "我和妹妹" || tags.includes("我和妹妹");
 });
+
+const posts = all.sort(comparePublicationEntries);
 
 const items: TimelineItem[] = posts.map((post) => {
 	const tags: string[] = post.data.tags ?? [];
