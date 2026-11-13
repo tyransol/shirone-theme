@@ -10,7 +10,7 @@ if (mockOptions) {
 	const posts = await getCollection("posts");
 	postsJson = JSON.stringify(
 		posts
-			.filter((p) => p.data.published)
+			.filter((p) => p.data.published && p.data.unlisted !== true)
 			.map((p) => ({
 				id: p.id,
 				p: p.data.published.getTime(),
