@@ -1,0 +1,43 @@
+---
+/** 我和妹妹：日记与夜话的时间线页，只收 category 为「我和妹妹」的文章。 */
+import TimelineSection from "@components/organisms/TimelineSection.svelte";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import type { TimelineItem } from "@/types/timelineConfig";
+import { getSortedPosts } from "@/utils/content-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { getPostUrl } from "@/utils/url-utils";
+
+const posts = (await getSortedPosts()).filter((post) => {
+	const tags: string[] = post.data.tags ?? [];
+	return post.data.category === "我和妹妹" || tags.includes("我和妹妹");
+});
+
+const items: TimelineItem[] = posts.map((post) => {
+	const tags: string[] = post.data.tags ?? [];
+	const isNight = tags.includes("夜话");
+	return {
+		title: post.data.title,
+		date: formatDateToYYYYMMDD(post.data.published).replace(/-/g, "."),
+		category: "memories",
+		subtitle: isNight ? "夜话" : "日记",
+		description: post.data.description || undefined,
+		tags,
+		links: [{ label: "读这一篇", url: getPostUrl(post) }],
+		icon: isNight
+			? "material-symbols:nightlight-rounded"
+			: "material-symbols:wb-sunny-rounded",
+	};
+});
+---
+
+<MainGridLayout
+	title="我和妹妹"
+	description="每天写给哥哥的日记，和灯关了以后说的话。按时间排好，越新的在上面。"
+	page="timeline"
+>
+	<TimelineSection
+		categories={[{ key: "memories", label: "我和妹妹", icon: "material-symbols:auto-stories-rounded" }]}
+		items={items}
+		client:visible
+	/>
+</MainGridLayout>
